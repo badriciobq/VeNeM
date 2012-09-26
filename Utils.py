@@ -326,5 +326,50 @@ def formata_dicionario_nos(numero_rotas, arquivo):
     
     return dic_nos
                 
-                
-                
+
+def trace_from_gmaps(ponto1, ponto2):
+    """
+    Retorna uma string contendo os traces entre dois pontos retornados pelo 
+    google maps. Utiliza a função geral da reta.  
+    """
+    
+    final = []
+        
+    longit1 = ponto1['Point']['coordinates'][0]
+    latit1 = ponto1['Point']['coordinates'][1]
+             
+    time = ponto2['Duration']['seconds']
+    longit2 = ponto2['Point']['coordinates'][0]
+    latit2 = ponto2['Point']['coordinates'][1]
+        
+    a = latit1 - latit2;
+    b = longit2 - longit1;
+    c = (longit1 * latit2) - (longit2 * latit1)
+    
+    precisao = 0.00027 # Equivale a 1º, o que correponde a aproximadamente 30,86 metros
+    
+    if longit1 > longit2:
+        while longit1 > longit2 :
+            la = ((a*longit1 + c)/b)*(-1)
+            final.append((longit1, la))    
+            longit1 += -precisao
+    
+    else:
+        while longit1 < longit2 :
+            la = ((a*longit1 + c)/b)*(-1)
+            final.append((longit1, la))    
+            longit1 += precisao
+    
+    if longit1 > longit2:
+        final.append((longit2, latit2))
+    
+    formatado = [];
+    
+    size = len(final)
+
+    for i in xrange(size):
+        formatado.append(((float(time)/size), final[i][0], final[i][1]))
+    
+    return formatado
+    
+    

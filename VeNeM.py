@@ -34,6 +34,8 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
     Função para gerar o arquivo de mobilidade compatível com o mixim através
     de um arquivo contendo as rotas.  
     """
+    if origem[-1] != '/':
+        origem += '/'
     
     lista = Utils.pegar_coordenadas_rotas(arquivo)
     
@@ -49,7 +51,7 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
 
     dic_nos = Utils.formata_dicionario_nos(len(lista), nos)
     
-    with open('route.boon', 'w') as f:
+    with open(origem + 'route.boon', 'w') as f:
     
         for i in xrange(len(dic_nos)):
         
@@ -60,20 +62,25 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
             
             for t in inter:
                 t = int(t)
-                            
-                for r in lista[t]['rotas']:
-                    time = r['Duration']['seconds']
-                    longit = r['Point']['coordinates'][0]
-                    latit = r['Point']['coordinates'][1]
+                tamanho = len(lista[t]['rotas'])
+                
+                for i in xrange(tamanho-1):
+                
+                    p1 = lista[t]['rotas'][i]
+                    p2 = lista[t]['rotas'][i+1]
                     
-                    tempo_simulacao = time + tempo_simulacao
-                    x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
-                    f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
+                    percurso = Utils.trace_from_gmaps(p1, p2)
+                    
+                    for i in percurso:
+                        time = i[0]
+                        longit = i[1]
+                        latit = i[2]
+                        
+                        tempo_simulacao = time + tempo_simulacao                       
+                        x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
+                        f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
             
             f.write('\n')
-
-    if origem[-1] != '/':
-        origem += '/'
     
     print config.format(origem + 'route.boon', playgroundy, playgroundx, len(dic_nos), 'route.boon')
 
@@ -85,6 +92,10 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
     de um arquivo de traces no seguinte formato: 
     <latitude>,<longitude>,<altitude>,<timestamp UTC>,<velocidade m/s>
     """
+    
+    if origem[-1] != '/':
+        origem += '/'
+        
     trac = Utils.pegar_coordenadas_traces(files)
 
     menorLat, maiorLat, menorLon, maiorLon = Utils.coordenadas_extremas_traces(trac)
@@ -95,7 +106,7 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
 
     dic_nos = Utils.formata_dicionario_nos(len(trac), nos)
         
-    with open('traces.boon', 'w') as f:
+    with open(origem + 'traces.boon', 'w') as f:
     
         for i in xrange(len(dic_nos)):
         
@@ -116,12 +127,8 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
                     f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
             
                 f.write('\n')   
-            
-    if origem[-1] != '/':
-        origem += '/'
     
     print config.format(origem + 'traces.boon', playgroundy, playgroundx, len(trac), 'traces.boon')
-
 
 
 if __name__ == '__main__':
