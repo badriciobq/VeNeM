@@ -47,9 +47,16 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
     
     playgroundx, playgroundy = Utils.converte_plano_carteziano((menorLat, maiorLon),(maiorLat, menorLon))
     
+    
+    try:
+        dic_nos = Utils.formata_dicionario_nos(len(lista), nos)
+        
+    except Utils.RouterError:
+        sys.stderr.write("Não é possível gerar rota para os indices definidos\n")
+        sys.exit(1)
+        
     Thread(target=Utils.download_mapa, args=([(menorLat,maiorLon),(maiorLat, maiorLon),(maiorLat, menorLon),(menorLat, menorLon)], origem)).start()
-
-    dic_nos = Utils.formata_dicionario_nos(len(lista), nos)
+    
     
     with open(origem + 'route.boon', 'w') as f:
     
@@ -58,9 +65,9 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
             if dic_nos.has_key(i):
                 inter = dic_nos.get(i)
     
-            tempo_simulacao = 0
+            tempo_simulacao = inter[0]
             
-            for t in inter:
+            for t in inter[1:]:
                 t = int(t)
                 tamanho = len(lista[t]['rotas'])
                 
@@ -102,9 +109,18 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
     
     playgroundx, playgroundy = Utils.converte_plano_carteziano((menorLat, maiorLon),(maiorLat, menorLon))
     
+    try:
+        dic_nos = Utils.formata_dicionario_nos(len(trac), nos)
+    
+    except Utils.RouterError:
+        sys.stderr.write("Não é possível gerar rota para os indices definidos\n")
+        sys.exit(1)
+        
     Thread(target=Utils.download_mapa, args=([(menorLat,maiorLon),(maiorLat, maiorLon),(maiorLat, menorLon),(menorLat, menorLon)] , origem)).start()
 
-    dic_nos = Utils.formata_dicionario_nos(len(trac), nos)
+
+    print dic_nos
+    
         
     with open(origem + 'traces.boon', 'w') as f:
     
@@ -113,9 +129,10 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
             if dic_nos.has_key(i):
                 inter = dic_nos.get(i)
     
-            for t in inter:
+            tempo_simulacao = inter[0]
+            
+            for t in inter[1:]:
                 t = int(t)
-                tempo_simulacao = 0
                 
                 for r in trac[t]:
                     time = r['tempo']
@@ -126,7 +143,7 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
                     x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
                     f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
             
-                f.write('\n')   
+            f.write('\n')   
     
     print config.format(origem + 'traces.boon', playgroundy, playgroundx, len(trac), 'traces.boon')
 
@@ -149,7 +166,7 @@ if __name__ == '__main__':
                                 
     parser.add_argument("-n", "--nos", dest="nos",
                         help="""Arquivo contendo o indice do nó e as rotas que o nó deverá seguir separados por
-                                espaço. Ex: <nozero> <rotazero> <rotaum> <rotadois>
+                                espaço. Ex: <nozero> <tempo inicial> <rotazero> <rotaum> <rotadois>
                                 
                                 O arquivo deve conter as configurações de cada nó por linha, se o nó não estiver
                                 presente no arquivo a rota será gerada utilizando o indíce do nó""")

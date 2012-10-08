@@ -309,12 +309,12 @@ def formata_dicionario_nos(numero_rotas, arquivo):
                     key = int(splited[0])
                     values = []
                     for i in splited[1:]:
-                        if int(i) < numero_rotas:
+                        if int(i) < numero_rotas or i == splited[1]:
                             values.append(int(i))
                         else:
-                            sys.stderr.write('Indice de rota errado, verifique o arquivo "{0}"\n'.format(arquivo))
-                            sys.exit(1)
-                except:
+                            raise RouterError("Indice de rota errado")
+                            
+                except ValueError:
                     #Ignora caracteres não numericos presente no arquivo de nós
                     pass
                         
@@ -322,7 +322,7 @@ def formata_dicionario_nos(numero_rotas, arquivo):
     
     for i in xrange(numero_rotas):
         if not dic_nos.has_key(i):
-            dic_nos.update({i : [i]})
+            dic_nos.update({i : [ 0 , i]})
     
     return dic_nos
                 
@@ -371,5 +371,9 @@ def trace_from_gmaps(ponto1, ponto2):
         formatado.append(((float(time)/size), final[i][0], final[i][1]))
     
     return formatado
+    
+    
+class RouterError( Exception ):
+    pass
     
     
