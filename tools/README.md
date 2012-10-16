@@ -3,7 +3,7 @@ GetLocation
 Aplicação desenvolvida em android para coletar os traces de GPS no formato 
 suportado pela aplicação VeNeM. Os arquivos de traces, são salvos no 
 diretório VeNeM na mídia de armazenamento externo, geralmente no SDCard. O
-nome do arquivo é formado 
+nome do arquivo é formatado pela data e hora do início da rota. 
 
 
 Autor
