@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<resources>
+    <string name="app_name">VeNeM</string>
+    <string name="presentation">Serviço parado</string>
+    <string name="stop">Parar</string>
+    <string name="start">Inicar</string>
+    <string name="latitude">Latitude: </string>
+    <string name="longitude">Longitude: </string>
+    <string name="altitude">Altitude: </string>
+    <string name="hora">Hora: </string>
+    <string name="velocidade">Velocidade: </string>
+    <string name="precisao">Precisão: </string>
+    <string name="esperando">Aguardando...</string>
+</resources>

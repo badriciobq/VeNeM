@@ -3,8 +3,8 @@
 
 import os
 import sys
-import Utils
 import argparse
+from Utils import Utils
 from threading import Thread
 
 
