@@ -17,7 +17,7 @@ Copie o arquivo: "{0}" para a raiz do seu projeto;
 Configure no seu arquivo omnetpp.ini os seguinte parâmetros:
 **.playgroundSizeY: {1}km
 **.playgroundSizeX: {2}km
-**.numNodes = {3}           # O número de nós pode ser alterado se tiver o nodeId ajustado corretamente.
+**.numNodes = {3}           
 
 
 **.node[*].mobilityType = "BonnMotionMobility"
@@ -86,6 +86,10 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
                         tempo_simulacao = time + tempo_simulacao                       
                         x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
                         f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
+                        
+                # Necessário para impedir que existe duas coordenadas com o mesmo ponto, o que
+                # provoca uma exceção na simulação
+                tempo_simulacao = tempo_simulacao + 2
             
             f.write('\n')
     
@@ -99,7 +103,7 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
     de um arquivo de traces no seguinte formato: 
     <latitude>,<longitude>,<altitude>,<timestamp UTC>,<velocidade m/s>
     """
-    
+        
     if origem[-1] != '/':
         origem += '/'
         
@@ -117,9 +121,6 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
         sys.exit(1)
         
     Thread(target=Utils.download_mapa, args=([(menorLat,maiorLon),(maiorLat, maiorLon),(maiorLat, menorLon),(menorLat, menorLon)] , origem)).start()
-
-
-    print dic_nos
     
         
     with open(origem + 'traces.boon', 'w') as f:
@@ -142,10 +143,14 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
                 
                     x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
                     f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
+                
+                # Necessário para impedir que existe duas coordenadas com o mesmo ponto, o que
+                # provoca uma exceção na simulação
+                tempo_simulacao = tempo_simulacao + 2
             
             f.write('\n')   
     
-    print config.format(origem + 'traces.boon', playgroundy, playgroundx, len(trac), 'traces.boon')
+    print config.format(origem + 'traces.boon', playgroundy, playgroundx, len(dic_nos), 'traces.boon')
 
 
 if __name__ == '__main__':
