@@ -1,7 +1,0 @@
-Documentação o módulo Utils
-=====================================================
-
-.. automodule:: Utils
-   :members:
- 
-

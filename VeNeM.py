@@ -41,12 +41,39 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
     
     if not lista:
         sys.stderr.write('Não existe rota para os endereços configurados.\n')
+        exit(1)   
+
+    menorLat, maiorLat, menorLon, maiorLon = Utils.coordenadas_extremas_rotas(lista)     
+
+    if menorLat < 0 and maiorLat < 0 and menorLon < 0 and maiorLon < 0:
+        pontoZero = (menorLat, maiorLon)
+        pontoUm = (menorLat, menorLon)
+        pontoDois = (maiorLat, menorLon)
+        pontoTres = (maiorLat, maiorLon)
+
+    elif menorLat > 0 and maiorLat > 0 and menorLon < 0 and maiorLon < 0:
+	pontoZero = (maiorLat, maiorLon) 
+        pontoUm = (maiorLat, menorLon)
+        pontoDois = (menorLat, menorLon)
+        pontoTres = (menorLat, maiorLon)
+
+    elif menorLat > 0 and maiorLat > 0 and menorLon > 0 and maiorLon > 0:
+	pontoZero = (maiorLat, menorLon)  
+        pontoUm = (maiorLat, maiorLon)
+        pontoDois = (menorLat, maiorLon)
+        pontoTres = (menorLat, menorLon)
+
+    elif menorLat < 0 and maiorLat < 0 and menorLon > 0 and maiorLon > 0:
+	pontoZero = (menorLat, menorLon)
+        pontoUm = (menorLat, maiorLon)
+        pontoDois = (maiorLat, maiorLon)
+        pontoTres = (maiorLat, menorLon)
+
+    else:
+	sys.stderr.write("Erro nas coordenadas.\n")
         exit(1)
-    
-    menorLat, maiorLat, menorLon, maiorLon = Utils.coordenadas_extremas_rotas(lista)    
-    
-    playgroundx, playgroundy = Utils.converte_plano_carteziano((menorLat, maiorLon),(maiorLat, menorLon))
-    
+
+    playgroundx, playgroundy = Utils.converte_plano_carteziano(pontoZero, pontoDois)
     
     try:
         dic_nos = Utils.formata_dicionario_nos(len(lista), nos)
@@ -55,9 +82,8 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
         sys.stderr.write("Não é possível gerar rota para os indices definidos\n")
         sys.exit(1)
         
-    Thread(target=Utils.download_mapa, args=([(menorLat,maiorLon),(maiorLat, maiorLon),(maiorLat, menorLon),(menorLat, menorLon)], origem)).start()
-    
-    
+    Thread(target=Utils.download_mapa, args=([pontoZero, pontoTres, pontoDois, pontoUm], origem)).start()
+ 
     with open(origem + 'route.boon', 'w') as f:
     
         for i in xrange(len(dic_nos)):
@@ -77,20 +103,19 @@ def boon_to_routes(arquivo, origem=os.getcwd(), nos=None):
                     p2 = lista[t]['rotas'][i+1]
                     
                     percurso = Utils.trace_from_gmaps(p1, p2)
-                    
                     for i in percurso:
                         time = i[0]
                         longit = i[1]
                         latit = i[2]
                         
-                        tempo_simulacao = time + tempo_simulacao                       
-                        x,y = Utils.converte_plano_carteziano((menorLat, maiorLon), (latit, longit))
+                        tempo_simulacao = time + tempo_simulacao
+                        x,y = Utils.converte_plano_carteziano(pontoZero, (latit, longit))
                         f.write('{} {} {} '.format(tempo_simulacao, x*1000, y*1000))
                         
                 # Necessário para impedir que existe duas coordenadas com o mesmo ponto, o que
                 # provoca uma exceção na simulação
                 tempo_simulacao = tempo_simulacao + 2
-            
+
             f.write('\n')
     
     print config.format(origem + 'route.boon', playgroundy, playgroundx, len(dic_nos), 'route.boon')

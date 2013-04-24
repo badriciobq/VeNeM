@@ -1,6 +1,0 @@
-Documentação do módulo VeNeM
-================================================
-
-.. automodule:: VeNeM
-   :members:
- 

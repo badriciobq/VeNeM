@@ -16,7 +16,7 @@ def distancia_entre_pontos(ponto1, ponto2):
         no 3Quadrante do globo, ou seja, todos os valores de longitude e
         latitude são negativos. Para garantir a consistência da equação seria
         necessários melhores testes, em casos em que um ponto está ao norte e
-        o outro está so sul por exemplo.
+        o outro está so sul por exemplo. Utiliza a formula de haversine
         
         Parâmetro: Dois pontos contendo o conjunto de coordenadas no seguintes
                    formato tuple('LATITUDE', 'LONGITUDE')
@@ -45,10 +45,10 @@ def converte_plano_carteziano(ponto1, ponto2):
             formato: ('latitude', 'longitude')
     """
     
-    distanciaReto =  distancia_entre_pontos((ponto1),(ponto2))    
-    y = math.sqrt(distanciaReto**2 - distancia_entre_pontos((ponto2[0], ponto1[1]), (ponto2[0], ponto2[1]))**2)
+    distanciaReto = distancia_entre_pontos((ponto1),(ponto2))
+    y = distancia_entre_pontos((ponto2[0], ponto1[1]), ponto1)
     x = math.sqrt(distanciaReto**2 - y**2)
-    
+
     return x,y
 
 
@@ -80,7 +80,7 @@ def download_mapa(coordenadas, diretorio=os.environ['HOME']):
             - Copie o mapa para o diretório omnetpp-4.2.2/imagens/maps/
             - Acrescente o parâmetro "bgi=maps/mapa,s" na tag @display do arquivo "BaseNetwork.net"
             """
-        
+    
     except urllib2.URLError:
         sys.stderr.write('Erro ao acessar a url: {}\nFaça o download do mapa manualmente\n'.format(url_mapa))
         
@@ -346,7 +346,8 @@ def trace_from_gmaps(ponto1, ponto2):
     b = longit2 - longit1;
     c = (longit1 * latit2) - (longit2 * latit1)
     
-    precisao = 0.00027 # Equivale a 1º, o que correponde a aproximadamente 30,86 metros
+    # Equivale a 1º, o que correponde a aproximadamente 30,86 metros
+    precisao = 0.00027 
     
     if longit1 > longit2:
         while longit1 > longit2 :
