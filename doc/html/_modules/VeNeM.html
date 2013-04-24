@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VeNeM &mdash; VeNeM 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="VeNeM 0.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">VeNeM 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for VeNeM</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">Utils</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+
+<span class="n">config</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+
+<span class="s">Para configurar sua simulação siga os seguintes passos:</span>
+
+<span class="s">Copie o arquivo: &quot;{0}&quot; para a raiz do seu projeto;</span>
+
+<span class="s">Configure no seu arquivo omnetpp.ini os seguinte parâmetros:</span>
+<span class="s">**.playgroundSizeY: {1}km</span>
+<span class="s">**.playgroundSizeX: {2}km</span>
+<span class="s">**.numNodes = {3}           # O número de nós pode ser alterado se tiver o nodeId ajustado corretamente.</span>
+
+
+<span class="s">**.node[*].mobilityType = &quot;BonnMotionMobility&quot;</span>
+<span class="s">**.node[*].mobility.traceFile = &quot;{4}&quot;</span>
+<span class="s">**.node[*].mobility.nodeId = -1</span>
+<span class="s">**.node[*].mobility.debug = false</span>
+<span class="s">**.node[*].mobility.updateInterval = 0.01s</span>
+
+<span class="s">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="boon_to_routes"><a class="viewcode-back" href="../venem.html#VeNeM.boon_to_routes">[docs]</a><span class="k">def</span> <span class="nf">boon_to_routes</span><span class="p">(</span><span class="n">arquivo</span><span class="p">,</span> <span class="n">origem</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">nos</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Função para gerar o arquivo de mobilidade compatível com o mixim através</span>
+<span class="sd">    de um arquivo contendo as rotas.  </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">lista</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">pegar_coordenadas_rotas</span><span class="p">(</span><span class="n">arquivo</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lista</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Não existe rota para os endereços configurados.</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">,</span> <span class="n">maiorLon</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">coordenadas_extremas_rotas</span><span class="p">(</span><span class="n">lista</span><span class="p">)</span>    
+    
+    <span class="n">playgroundx</span><span class="p">,</span> <span class="n">playgroundy</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">converte_plano_carteziano</span><span class="p">((</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">))</span>
+    
+    <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">download_mapa</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">([(</span><span class="n">menorLat</span><span class="p">,</span><span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">),(</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">)],</span> <span class="n">origem</span><span class="p">))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">dic_nos</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">formata_dicionario_nos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lista</span><span class="p">),</span> <span class="n">nos</span><span class="p">)</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;route.boon&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dic_nos</span><span class="p">)):</span>
+        
+            <span class="k">if</span> <span class="n">dic_nos</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">inter</span> <span class="o">=</span> <span class="n">dic_nos</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+            <span class="n">tempo_simulacao</span> <span class="o">=</span> <span class="mi">0</span>
+            
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">inter</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                            
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">lista</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s">&#39;rotas&#39;</span><span class="p">]:</span>
+                    <span class="n">time</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;Duration&#39;</span><span class="p">][</span><span class="s">&#39;seconds&#39;</span><span class="p">]</span>
+                    <span class="n">longit</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;Point&#39;</span><span class="p">][</span><span class="s">&#39;coordinates&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">latit</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;Point&#39;</span><span class="p">][</span><span class="s">&#39;coordinates&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    
+                    <span class="n">tempo_simulacao</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">tempo_simulacao</span>
+                    <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">converte_plano_carteziano</span><span class="p">((</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),</span> <span class="p">(</span><span class="n">latit</span><span class="p">,</span> <span class="n">longit</span><span class="p">))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;{} {} {} &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tempo_simulacao</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">1000</span><span class="p">))</span>
+            
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">origem</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">origem</span> <span class="o">+=</span> <span class="s">&#39;/&#39;</span>
+    
+    <span class="k">print</span> <span class="n">config</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origem</span> <span class="o">+</span> <span class="s">&#39;route.boon&#39;</span><span class="p">,</span> <span class="n">playgroundy</span><span class="p">,</span> <span class="n">playgroundx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dic_nos</span><span class="p">),</span> <span class="s">&#39;route.boon&#39;</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="boon_to_traces"><a class="viewcode-back" href="../venem.html#VeNeM.boon_to_traces">[docs]</a><span class="k">def</span> <span class="nf">boon_to_traces</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">origem</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">nos</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Função para gerar o arquivo de mobilidade compatível com o mixim através</span>
+<span class="sd">    de um arquivo de traces no seguinte formato: </span>
+<span class="sd">    &lt;latitude&gt;,&lt;longitude&gt;,&lt;altitude&gt;,&lt;timestamp UTC&gt;,&lt;velocidade m/s&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">trac</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">pegar_coordenadas_traces</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">,</span> <span class="n">maiorLon</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">coordenadas_extremas_traces</span><span class="p">(</span><span class="n">trac</span><span class="p">)</span>
+    
+    <span class="n">playgroundx</span><span class="p">,</span> <span class="n">playgroundy</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">converte_plano_carteziano</span><span class="p">((</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">))</span>
+    
+    <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">download_mapa</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">([(</span><span class="n">menorLat</span><span class="p">,</span><span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),(</span><span class="n">maiorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">),(</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">menorLon</span><span class="p">)]</span> <span class="p">,</span> <span class="n">origem</span><span class="p">))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="n">dic_nos</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">formata_dicionario_nos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trac</span><span class="p">),</span> <span class="n">nos</span><span class="p">)</span>
+        
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;traces.boon&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dic_nos</span><span class="p">)):</span>
+        
+            <span class="k">if</span> <span class="n">dic_nos</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">inter</span> <span class="o">=</span> <span class="n">dic_nos</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">inter</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">tempo_simulacao</span> <span class="o">=</span> <span class="mi">0</span>
+                
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">trac</span><span class="p">[</span><span class="n">t</span><span class="p">]:</span>
+                    <span class="n">time</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s">&#39;tempo&#39;</span><span class="p">]</span>
+                    <span class="n">latit</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;latitude&#39;</span><span class="p">]),</span> <span class="mi">6</span><span class="p">)</span>
+                    <span class="n">longit</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;longitude&#39;</span><span class="p">]),</span> <span class="mi">6</span><span class="p">)</span>
+                    <span class="n">tempo_simulacao</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">tempo_simulacao</span>
+                
+                    <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">converte_plano_carteziano</span><span class="p">((</span><span class="n">menorLat</span><span class="p">,</span> <span class="n">maiorLon</span><span class="p">),</span> <span class="p">(</span><span class="n">latit</span><span class="p">,</span> <span class="n">longit</span><span class="p">))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;{} {} {} &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tempo_simulacao</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="mi">1000</span><span class="p">))</span>
+            
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>   
+            
+    <span class="k">if</span> <span class="n">origem</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">origem</span> <span class="o">+=</span> <span class="s">&#39;/&#39;</span>
+    
+    <span class="k">print</span> <span class="n">config</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origem</span> <span class="o">+</span> <span class="s">&#39;traces.boon&#39;</span><span class="p">,</span> <span class="n">playgroundy</span><span class="p">,</span> <span class="n">playgroundx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">trac</span><span class="p">),</span> <span class="s">&#39;traces.boon&#39;</span><span class="p">)</span>
+
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    
+    <span class="n">des</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">    Gera os arquivo necessário para simular a mobilidade veicular em uma cidade, utilizando o simulador</span>
+<span class="s">    Omnetpp juntamente com o framwork MiXim.</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">des</span><span class="p">,</span> <span class="n">epilog</span><span class="o">=</span><span class="s">&#39;copyleft=badriciobq [at] gmail [dot] com&#39;</span><span class="p">)</span>
+    
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-r&quot;</span><span class="p">,</span> <span class="s">&quot;--routes&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;rotas&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Arquivo contendo os endereços das rotas no formato:</span>
+<span class="s">                                from: &lt;origem&gt; to: &lt;destino&gt; &quot;&quot;&quot;</span><span class="p">)</span>
+                  
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="s">&quot;--origem&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;origem&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Diretório de origem. Onde serão salvos os arquivos.&#39;</span><span class="p">)</span>
+                                
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-n&quot;</span><span class="p">,</span> <span class="s">&quot;--nos&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;nos&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Arquivo contendo o indice do nó e as rotas que o nó deverá seguir separados por</span>
+<span class="s">                                espaço. Ex: &lt;nozero&gt; &lt;rotazero&gt; &lt;rotaum&gt; &lt;rotadois&gt;</span>
+<span class="s">                                </span>
+<span class="s">                                O arquivo deve conter as configurações de cada nó por linha, se o nó não estiver</span>
+<span class="s">                                presente no arquivo a rota será gerada utilizando o indíce do nó&quot;&quot;&quot;</span><span class="p">)</span>
+                                      
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-t&quot;</span><span class="p">,</span> <span class="s">&quot;--traces&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;traces&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&quot;*&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Lista de arquivos dos traces de GPS capturados no seguinte formato: </span>
+<span class="s">                                &lt;latitude&gt;,&lt;longitude&gt;,&lt;altitude&gt;,&lt;timestamp UTC&gt;,&lt;velocidade em m/s&gt; &quot;&quot;&quot;</span><span class="p">)</span>
+                                
+    <span class="n">argumentos</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">argumentos</span><span class="o">.</span><span class="n">rotas</span><span class="p">)</span> <span class="o">^</span> <span class="nb">bool</span><span class="p">(</span><span class="n">argumentos</span><span class="o">.</span><span class="n">traces</span><span class="p">)):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">origem</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">argumentos</span><span class="o">.</span><span class="n">origem</span><span class="p">):</span>
+        <span class="n">origem</span> <span class="o">=</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">origem</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">origem</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">traces</span><span class="p">:</span>
+        <span class="n">boon_to_traces</span><span class="p">(</span><span class="n">argumentos</span><span class="o">.</span><span class="n">traces</span><span class="p">,</span> <span class="n">origem</span><span class="p">,</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">nos</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">rotas</span><span class="p">:</span>
+        <span class="n">boon_to_routes</span><span class="p">(</span><span class="n">argumentos</span><span class="o">.</span><span class="n">rotas</span><span class="p">,</span> <span class="n">origem</span><span class="p">,</span> <span class="n">argumentos</span><span class="o">.</span><span class="n">nos</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">VeNeM 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Maurício José da Silva.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
