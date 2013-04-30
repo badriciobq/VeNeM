@@ -134,7 +134,7 @@ def boon_to_traces(files, origem=os.getcwd(), nos=None):
         
     trac = Utils.pegar_coordenadas_traces(files)
 
-    menorLat, maiorLat, menorLon, maiorLon = Utils.coordenadas_extremas_traces(trac)
+    menorLat, maiorLat, menorLon, maiorLon = Utils.coordenadas_extremas_traces(trac, 0.0002)
     
     playgroundx, playgroundy = Utils.converte_plano_carteziano((menorLat, maiorLon),(maiorLat, menorLon))
     
