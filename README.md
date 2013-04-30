@@ -1,8 +1,5 @@
 
-![Alt text](logo/Venem2.png "Logo do Venem")
-
-VeNeM
-===========
+->![Logo VeNeM](logo/Venem2.png "Logo do Venem")
 
 Uma das maiores dificuldades para simular uma rede veicular, é garantir
 que a simulação respeite os padrões de mobilidade de um ambiente real.
