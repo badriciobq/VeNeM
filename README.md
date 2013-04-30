@@ -1,3 +1,6 @@
+
+![Alt text](logo/Venem2.png "Logo do Venem")
+
 VeNeM
 ===========
 
